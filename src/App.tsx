@@ -25,7 +25,9 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
-  KeyRound
+  KeyRound,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { 
   isSupabaseConfigured, 
@@ -85,6 +87,8 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState<string>("");
   const [adminError, setAdminError] = useState<string>("");
   const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showHintPassword, setShowHintPassword] = useState<boolean>(true);
 
   // Load from Supabase with LocalStorage fallback
   useEffect(() => {
@@ -131,6 +135,13 @@ export default function App() {
     }
     loadData();
   }, []);
+
+  // Reset password visibility when modal opens
+  useEffect(() => {
+    if (showAdminModal) {
+      setShowPassword(false);
+    }
+  }, [showAdminModal]);
 
   const handleSaveOfficer = async (officer: Officer) => {
     const isEdit = !!editingOfficer;
@@ -740,18 +751,24 @@ export default function App() {
                   {[0, 1, 2, 3].map((index) => (
                     <div 
                       key={index}
-                      className={`w-4 h-4 rounded-full border-2 transition-all ${
+                      className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
                         adminPasswordInput.length > index 
                           ? "bg-emerald-600 border-emerald-600 scale-110" 
                           : "border-slate-300 bg-slate-50"
                       }`}
-                    />
+                    >
+                      {showPassword && adminPasswordInput.length > index && (
+                        <span className="text-[9px] font-bold text-white leading-none font-mono">
+                          {adminPasswordInput[index]}
+                        </span>
+                      )}
+                    </div>
                   ))}
                 </div>
 
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     maxLength={4}
                     value={adminPasswordInput}
                     onChange={(e) => {
@@ -765,18 +782,54 @@ export default function App() {
                       }
                     }}
                     placeholder="ป้อนรหัสผ่าน 4 หลัก"
-                    className="w-full text-center tracking-[0.5em] font-mono text-lg py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full text-center tracking-[0.5em] font-mono text-lg py-2 pl-10 pr-10 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     autoFocus
                   />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
                     <KeyRound className="w-4 h-4" />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer p-1 rounded hover:bg-slate-50 transition"
+                    title={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
 
                 {adminError ? (
                   <p className="text-rose-600 text-xs text-center font-semibold animate-pulse">{adminError}</p>
                 ) : (
-                  <p className="text-slate-400 text-[11px] text-center">รหัสผ่านสำหรับเจ้าหน้าที่ระบบคือ <span className="font-bold text-slate-600">1234</span></p>
+                  <div className="flex flex-col items-center gap-1 bg-slate-50 py-1.5 px-3 rounded-xl border border-slate-100">
+                    <p className="text-slate-400 text-[11px] text-center flex items-center justify-center gap-1.5 flex-wrap">
+                      <span>รหัสผ่านคือ</span>
+                      <span className="font-bold text-slate-600 font-mono">
+                        {showHintPassword ? "1234" : "••••"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowHintPassword(!showHintPassword)}
+                        className="text-emerald-700 hover:text-emerald-900 text-[11px] font-bold hover:underline cursor-pointer ml-1.5 inline-flex items-center gap-0.5"
+                      >
+                        {showHintPassword ? (
+                          <>
+                            <EyeOff className="w-3 h-3 inline" />
+                            <span>ซ่อนรหัสผ่าน</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3 h-3 inline" />
+                            <span>แสดงรหัสผ่าน</span>
+                          </>
+                        )}
+                      </button>
+                    </p>
+                  </div>
                 )}
               </div>
 
