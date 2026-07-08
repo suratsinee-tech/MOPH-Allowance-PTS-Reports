@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Remix: Remix: MOPH Allowance and PTS Report System",
+  "description": "ระบบจัดทำและส่งออกรายงานเบี้ยเลี้ยงเหมาจ่าย และ เงินเพิ่ม พ.ต.ส. สำหรับบุคลากรสาธารณสุข",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

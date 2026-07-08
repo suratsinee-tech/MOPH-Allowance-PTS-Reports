@@ -1,11 +1,65 @@
-<div align="center">
+# ระบบจัดทำใบเบิกเบี้ยเลี้ยงเหมาจ่าย และ พ.ต.ส. (MOPH Allowance & PTS Report System)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+ระบบจัดทำและส่งออกรายงานเบี้ยเลี้ยงเหมาจ่าย และ เงินเพิ่มสำหรับถึงแก่ผู้ปฏิบัติงานด้านสาธารณสุข (พ.ต.ส.) สำหรับบุคลากรทางการแพทย์และสาธารณสุข พัฒนาด้วย **React**, **TypeScript**, และ **Tailwind CSS** พร้อมระบบฐานข้อมูล **Supabase**
 
-  <h1>Built with AI Studio</h2>
+## 🌟 คุณสมบัติเด่น (Features)
+- **จัดการข้อมูลบุคลากร (Officer Management):** เพิ่ม แก้ไข ลบ และแสดงผลรายชื่อบุคลากรพร้อมประวัติการทำงานอย่างละเอียด
+- **คำนวณเบี้ยเลี้ยงอัตโนมัติ:** ระบบคำนวณเงินเบี้ยเลี้ยงเหมาจ่ายและเงินเพิ่ม พ.ต.ส. ตามเกณฑ์กระทรวงสาธารณสุข (MOPH)
+- **พรีวิวรายงานเสมือนจริง (Report Preview):** แสดงตัวอย่างใบเบิกเบี้ยเลี้ยงเหมาจ่าย และ พ.ต.ส. ตามรูปแบบเอกสารราชการที่ถูกต้องและพร้อมพิมพ์ (Print-ready)
+- **ส่งออกด้วย Google Apps Script (Apps Script Export):** มีโค้ดสำเร็จรูปสำหรับส่งออกข้อมูลและจัดทำรายงานผ่าน Google Sheets & Docs
+- **เชื่อมต่อกับฐานข้อมูล Supabase:** รองรับการซิงค์ข้อมูลแบบ Real-time และบันทึกข้อมูลอย่างปลอดภัยในระบบ Cloud
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+---
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 🛠️ โครงสร้างฐานข้อมูล (Database Setup)
+โครงการนี้ได้รับการออกแบบให้ใช้งานร่วมกับ **Supabase** คุณสามารถสร้างตารางที่จำเป็นได้โดยใช้ไฟล์สคริปต์ SQL ที่เตรียมไว้ในโฟลเดอร์โครงการ:
 
-</div>
+1. เข้าสู่ระบบ [Supabase Console](https://supabase.com/)
+2. สร้างโครงการใหม่ (New Project)
+3. ไปที่เมนู **SQL Editor**
+4. คัดลอกเนื้อหาจากไฟล์ `supabase_schema.sql` ในโปรเจกต์นี้ ไปวางแล้วกด **Run** เพื่อสร้างตารางและกำหนดสิทธิ์ความปลอดภัย (RLS)
+
+---
+
+## ⚙️ การตั้งค่าระบบ (Configuration)
+
+เมื่อทำการส่งออกไปยัง GitHub หรือนำไปรันบนเครื่องของคุณ ให้สร้างไฟล์ `.env` ที่โฟลเดอร์หลัก (Root) โดยอ้างอิงค่าจาก `.env.example`:
+
+```env
+# Supabase Configuration
+VITE_SUPABASE_URL="YOUR_SUPABASE_URL"
+VITE_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
+```
+
+---
+
+## 🚀 การติดตั้งและเริ่มใช้งาน (Getting Started)
+
+ทำตามขั้นตอนด้านล่างเพื่อรันแอปพลิเคชันบนเครื่องคอมพิวเตอร์ของคุณ:
+
+### 1. ติดตั้ง Dependencies
+```bash
+npm install
+```
+
+### 2. รันแอปพลิเคชันในโหมดพัฒนา (Development Mode)
+```bash
+npm run dev
+```
+แอปพลิเคชันจะทำงานที่พอร์ต `http://localhost:3000`
+
+### 3. สร้างเวอร์ชันสำหรับ Production (Build)
+```bash
+npm run build
+```
+ไฟล์สำหรับขึ้นระบบจริงจะถูกสร้างขึ้นในโฟลเดอร์ `dist/`
+
+---
+
+## 📦 การนำไปใช้ (Deployment)
+สามารถนำโฟลเดอร์ `dist/` ไปโฮสต์บนแพลตฟอร์ม Static Hosting ทั่วไปได้ เช่น Vercel, Netlify, Cloudflare Pages หรือ GitHub Pages
+
+---
+
+## 📄 ลิขสิทธิ์ (License)
+โครงการนี้เผยแพร่ภายใต้สัญญาอนุญาต Apache-2.0
