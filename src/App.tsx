@@ -21,7 +21,11 @@ import {
   Database,
   AlertTriangle,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  KeyRound
 } from "lucide-react";
 import { 
   isSupabaseConfigured, 
@@ -74,6 +78,13 @@ export default function App() {
   const [dbStatus, setDbStatus] = useState<"not_configured" | "connecting" | "connected" | "error">("connecting");
   const [dbErrorMsg, setDbErrorMsg] = useState<string>("");
   const [showDbConfig, setShowDbConfig] = useState<boolean>(false);
+
+  // Admin authentication states
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState<string>("");
+  const [adminError, setAdminError] = useState<string>("");
+  const [pendingAction, setPendingAction] = useState<{ type: string; data?: any } | null>(null);
 
   // Load from Supabase with LocalStorage fallback
   useEffect(() => {
@@ -151,6 +162,13 @@ export default function App() {
   };
 
   const handleDeleteOfficer = async (id: string) => {
+    if (!isAdmin) {
+      setPendingAction({ type: "delete", data: id });
+      setShowAdminModal(true);
+      setAdminPasswordInput("");
+      setAdminError("");
+      return;
+    }
     if (confirm("ยืนยันการลบรายชื่อบุคลากรรายนี้ออกจากฐานข้อมูล?")) {
       const updated = officers.filter(o => o.id !== id);
       
@@ -172,13 +190,53 @@ export default function App() {
   };
 
   const handleEditOfficer = (officer: Officer) => {
-    setEditingOfficer(officer);
-    setActiveView("form");
+    if (isAdmin) {
+      setEditingOfficer(officer);
+      setActiveView("form");
+    } else {
+      setPendingAction({ type: "edit", data: officer });
+      setShowAdminModal(true);
+      setAdminPasswordInput("");
+      setAdminError("");
+    }
   };
 
   const handleSelectOfficer = (officer: Officer) => {
     setSelectedOfficer(officer);
     setActiveView("preview");
+  };
+
+  const handleVerifyAdmin = () => {
+    if (adminPasswordInput === "1234") {
+      setIsAdmin(true);
+      setShowAdminModal(false);
+      setAdminError("");
+      
+      // Execute the pending action if any
+      if (pendingAction) {
+        if (pendingAction.type === "add") {
+          setEditingOfficer(null);
+          setActiveView("form");
+        } else if (pendingAction.type === "edit" && pendingAction.data) {
+          setEditingOfficer(pendingAction.data);
+          setActiveView("form");
+        } else if (pendingAction.type === "delete" && pendingAction.data) {
+          handleDeleteOfficer(pendingAction.data);
+        } else if (pendingAction.type === "seed") {
+          handleLoadSampleData();
+        }
+        setPendingAction(null);
+      }
+    } else {
+      setAdminError("รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
+    }
+  };
+
+  const handlePinClick = (num: string) => {
+    setAdminError("");
+    if (adminPasswordInput.length < 4) {
+      setAdminPasswordInput(prev => prev + num);
+    }
   };
 
   const handleLoadSampleData = async () => {
@@ -379,7 +437,38 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-2.5">
+            {/* Admin Lock Toggle */}
+            <button
+              onClick={() => {
+                if (isAdmin) {
+                  setIsAdmin(false);
+                } else {
+                  setPendingAction(null);
+                  setShowAdminModal(true);
+                  setAdminPasswordInput("");
+                  setAdminError("");
+                }
+              }}
+              className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                isAdmin 
+                  ? "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100" 
+                  : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+              }`}
+            >
+              {isAdmin ? (
+                <>
+                  <Unlock className="w-3.5 h-3.5 text-amber-600" />
+                  <span>โหมดแก้ไขข้อมูล 🔓</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-slate-500" />
+                  <span>สิทธิ์บุคคลทั่วไป 🔒</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => {
                 setActiveView("export");
@@ -394,8 +483,15 @@ export default function App() {
 
             <button
               onClick={() => {
-                setEditingOfficer(null);
-                setActiveView("form");
+                if (isAdmin) {
+                  setEditingOfficer(null);
+                  setActiveView("form");
+                } else {
+                  setPendingAction({ type: "add" });
+                  setShowAdminModal(true);
+                  setAdminPasswordInput("");
+                  setAdminError("");
+                }
               }}
               className="bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"
             >
@@ -529,10 +625,26 @@ export default function App() {
               onEdit={handleEditOfficer}
               onDelete={handleDeleteOfficer}
               onAddNew={() => {
-                setEditingOfficer(null);
-                setActiveView("form");
+                if (isAdmin) {
+                  setEditingOfficer(null);
+                  setActiveView("form");
+                } else {
+                  setPendingAction({ type: "add" });
+                  setShowAdminModal(true);
+                  setAdminPasswordInput("");
+                  setAdminError("");
+                }
               }}
-              onLoadSamples={handleLoadSampleData}
+              onLoadSamples={() => {
+                if (isAdmin) {
+                  handleLoadSampleData();
+                } else {
+                  setPendingAction({ type: "seed" });
+                  setShowAdminModal(true);
+                  setAdminPasswordInput("");
+                  setAdminError("");
+                }
+              }}
             />
           </div>
         )}
@@ -598,6 +710,132 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Admin Passcode Verification Modal */}
+      {showAdminModal && (
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-xl max-w-sm w-full border border-slate-100 overflow-hidden transform animate-in zoom-in-95 duration-200">
+            {/* Header banner */}
+            <div className="bg-gradient-to-r from-emerald-800 to-teal-800 p-6 text-white text-center relative">
+              <button 
+                onClick={() => {
+                  setShowAdminModal(false);
+                  setPendingAction(null);
+                }}
+                className="absolute right-4 top-4 text-white/70 hover:text-white transition text-sm font-bold bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/25">
+                <ShieldCheck className="w-6 h-6 text-emerald-200" />
+              </div>
+              <h3 className="font-bold text-lg font-sans">สิทธิ์ผู้ดูแลระบบ (Admin)</h3>
+              <p className="text-xs text-emerald-100/90 mt-1">กรุณากรอกรหัสผ่านเพื่ออนุมัติการทำงาน</p>
+            </div>
+
+            {/* Password input / PIN indicators */}
+            <div className="p-6 space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-center gap-3">
+                  {[0, 1, 2, 3].map((index) => (
+                    <div 
+                      key={index}
+                      className={`w-4 h-4 rounded-full border-2 transition-all ${
+                        adminPasswordInput.length > index 
+                          ? "bg-emerald-600 border-emerald-600 scale-110" 
+                          : "border-slate-300 bg-slate-50"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="password"
+                    maxLength={4}
+                    value={adminPasswordInput}
+                    onChange={(e) => {
+                      setAdminError("");
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      setAdminPasswordInput(val);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleVerifyAdmin();
+                      }
+                    }}
+                    placeholder="ป้อนรหัสผ่าน 4 หลัก"
+                    className="w-full text-center tracking-[0.5em] font-mono text-lg py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    autoFocus
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {adminError ? (
+                  <p className="text-rose-600 text-xs text-center font-semibold animate-pulse">{adminError}</p>
+                ) : (
+                  <p className="text-slate-400 text-[11px] text-center">รหัสผ่านสำหรับเจ้าหน้าที่ระบบคือ <span className="font-bold text-slate-600">1234</span></p>
+                )}
+              </div>
+
+              {/* Graphical Numeric PIN Pad */}
+              <div className="grid grid-cols-3 gap-2.5 max-w-[240px] mx-auto">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handlePinClick(num)}
+                    className="h-12 rounded-xl bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-150 text-sm font-bold text-slate-700 transition flex items-center justify-center cursor-pointer shadow-sm"
+                  >
+                    {num}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setAdminError("");
+                    setAdminPasswordInput("");
+                  }}
+                  className="h-12 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-100 text-xs font-bold text-rose-700 transition flex items-center justify-center cursor-pointer shadow-sm"
+                >
+                  ล้าง
+                </button>
+                <button
+                  onClick={() => handlePinClick("0")}
+                  className="h-12 rounded-xl bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-150 text-sm font-bold text-slate-700 transition flex items-center justify-center cursor-pointer shadow-sm"
+                >
+                  0
+                </button>
+                <button
+                  onClick={handleVerifyAdmin}
+                  className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-md shadow-emerald-600/10"
+                >
+                  ตกลง
+                </button>
+              </div>
+
+              {/* Close buttons */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setShowAdminModal(false);
+                    setPendingAction(null);
+                  }}
+                  className="w-full py-2 border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-500 rounded-xl transition cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleVerifyAdmin}
+                  className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm"
+                >
+                  ยืนยันรหัสผ่าน
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
