@@ -1406,7 +1406,7 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
           {/* ========================================================== */}
           {/* PAGES: Attached PDFs/Images for PTS */}
           {/* ========================================================== */}
-          {(() => {
+          {(activeFormTab === "all" || activeFormTab === "pts") && (() => {
             const attachments = officer.ptsAttachments || {};
             const docsList = [
               { key: "rightsVerification" as const, label: "1. แบบตรวจสอบข้อมูลสิทธิ์ (ตรวจสอบสิทธิ์พ้นข้อผูกพันฯ)" },
