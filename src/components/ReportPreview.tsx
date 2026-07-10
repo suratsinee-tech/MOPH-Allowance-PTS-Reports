@@ -1040,7 +1040,7 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
             <div className="space-y-2.5 pt-3 border-t border-slate-100">
               <h3 className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Paperclip className="w-3.5 h-3.5" />
-                เอกสารแนบ พ.ต.ส. (PDF)
+                เอกสารแนบ พ.ต.ส. (PDF/รูปภาพ)
               </h3>
               
               <div className="space-y-2">
@@ -1404,9 +1404,9 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
           )}
 
           {/* ========================================================== */}
-          {/* PAGES: Attached PDFs for PTS */}
+          {/* PAGES: Attached PDFs/Images for PTS */}
           {/* ========================================================== */}
-          {(activeFormTab === "all" || activeFormTab === "pts") && (() => {
+          {(() => {
             const attachments = officer.ptsAttachments || {};
             const docsList = [
               { key: "rightsVerification" as const, label: "1. แบบตรวจสอบข้อมูลสิทธิ์ (ตรวจสอบสิทธิ์พ้นข้อผูกพันฯ)" },
@@ -1419,6 +1419,8 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
               const file = attachments[doc.key];
               if (!file) return null;
 
+              const isImage = file.base64 && file.base64.startsWith("data:image/");
+
               return (
                 <div key={doc.key} className="print-pdf-page relative bg-white flex flex-col">
                   {/* On screen, show a beautiful header, but in print, it will be hidden */}
@@ -1428,17 +1430,26 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
                       เอกสารแนบ: {doc.label}
                     </span>
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-sans">
-                      พร้อมพิมพ์ (PDF)
+                      พร้อมพิมพ์ ({isImage ? "รูปภาพ" : "PDF"})
                     </span>
                   </div>
                   
-                  {/* The actual PDF viewer */}
-                  <div className="flex-1 w-full h-full min-h-0 relative">
-                    <iframe
-                      src={file.base64}
-                      className="w-full h-full border-none absolute inset-0"
-                      title={doc.label}
-                    />
+                  {/* The actual viewer */}
+                  <div className="flex-1 w-full h-full min-h-0 relative flex items-center justify-center p-4">
+                    {isImage ? (
+                      <img
+                        src={file.base64}
+                        alt={doc.label}
+                        className="max-w-full max-h-[290mm] object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <iframe
+                        src={file.base64}
+                        className="w-full h-full border-none absolute inset-0"
+                        title={doc.label}
+                      />
+                    )}
                   </div>
                 </div>
               );

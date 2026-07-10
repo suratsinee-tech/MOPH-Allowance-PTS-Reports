@@ -51,14 +51,15 @@ export default function OfficerForm({ initialOfficer, onSave, onCancel }: Office
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== "application/pdf") {
-      alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
+    const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("กรุณาเลือกไฟล์ PDF หรือรูปภาพ (PNG, JPG, JPEG) เท่านั้น");
       return;
     }
 
     // 2MB size limit to prevent localStorage storage limits
     if (file.size > 2 * 1024 * 1024) {
-      alert("ขนาดไฟล์ใหญ่เกินไป กรุณาเลือกไฟล์ PDF ที่มีขนาดไม่เกิน 2MB");
+      alert("ขนาดไฟล์ใหญ่เกินไป กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 2MB");
       return;
     }
 
@@ -125,10 +126,10 @@ export default function OfficerForm({ initialOfficer, onSave, onCancel }: Office
         ) : (
           <label className="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/20 py-2.5 px-3 rounded-lg cursor-pointer transition text-slate-500 hover:text-emerald-700">
             <Upload className="w-3.5 h-3.5 shrink-0" />
-            <span className="text-xs font-semibold">อัปโหลด PDF</span>
+            <span className="text-xs font-semibold">อัปโหลดไฟล์</span>
             <input
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,image/png,image/jpeg,image/jpg"
               onChange={(e) => handleFileChange(key, e)}
               className="hidden"
             />
@@ -431,7 +432,7 @@ export default function OfficerForm({ initialOfficer, onSave, onCancel }: Office
           <div className="mt-6 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100/60 space-y-3.5">
             <h4 className="text-xs font-bold text-indigo-950 flex items-center gap-1.5 uppercase tracking-wide">
               <Paperclip className="w-4 h-4 text-indigo-600" />
-              เอกสารแนบประกอบการจ่าย ค่าตอบแทน พ.ต.ส. (ไฟล์ PDF เท่านั้น)
+              เอกสารแนบประกอบการจ่าย ค่าตอบแทน พ.ต.ส. (ไฟล์ PDF หรือรูปภาพ)
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {renderAttachmentInput("rightsVerification", "1. แบบตรวจสอบข้อมูลสิทธิ์", "ตรวจสอบสิทธิ์พ้นข้อผูกพันฯ")}
