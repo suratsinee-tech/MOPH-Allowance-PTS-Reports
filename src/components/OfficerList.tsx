@@ -336,6 +336,20 @@ export default function OfficerList({
                       <span>พ.ต.ส.: <strong className="text-indigo-700">{officer.ptsRate.toLocaleString()}</strong> บาท/เดือน</span>
                     </span>
                   </div>
+
+                  {(() => {
+                    const attachments = officer.ptsAttachments || {};
+                    const count = Object.values(attachments).filter(Boolean).length;
+                    if (count > 0) {
+                      return (
+                        <div className="flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50/50 px-2 py-1 rounded-lg w-max border border-indigo-100">
+                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                          <span>เอกสารแนบ พ.ต.ส. ({count}/4 PDF)</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
 

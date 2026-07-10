@@ -20,6 +20,13 @@ export interface Address {
   province: string;
 }
 
+export interface PtsAttachments {
+  rightsVerification?: { name: string; base64: string }; // 1. แบบตรวจสอบข้อมูลสิทธิ์
+  license?: { name: string; base64: string };            // 2. ใบประกอบวิชาชีพ
+  degree?: { name: string; base64: string };             // 3. ใบปริญญาบัตร
+  idCard?: { name: string; base64: string };             // 4. บัตรประชาชน
+}
+
 export interface Officer {
   id: string;
   title: string;       // นาย / นาง / นางสาว / ยศ / ดร.
@@ -35,6 +42,7 @@ export interface Officer {
   fundSourceAllowance: string; // e.g., เงินบำรุงโรงพยาบาลสมเด็จพระยุพราชเดชอุดม
   fundSourcePts: string;       // e.g., เงินงบประมาณโรงพยาบาลสมเด็จพระยุพราชเดชอุดม
   workHistories: WorkHistory[];
+  ptsAttachments?: PtsAttachments;
 }
 
 export interface MonthlyReport {

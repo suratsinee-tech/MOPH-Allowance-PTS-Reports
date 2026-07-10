@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Officer, MonthlyReport } from "../types";
 import { THAI_MONTHS, bahtText, formatNumber, calculateDuration, getLastDayOfMonth, toThaiDigits } from "../utils";
-import { Printer, Calendar, Settings, Sliders, Undo2, CreditCard, Check, Sparkles, User, MapPin, Home, Clock } from "lucide-react";
+import { Printer, Calendar, Settings, Sliders, Undo2, CreditCard, Check, Sparkles, User, MapPin, Home, Clock, Paperclip, FileText, Download } from "lucide-react";
 
 interface ReportPreviewProps {
   officer: Officer;
@@ -543,7 +543,7 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
 
         /* Force TH Sarabun PSK and Sarabun for the entire document preview and print */
-        .print-page, .print-page * {
+        .print-page, .print-page *, .print-pdf-page, .print-pdf-page * {
           font-family: "TH Sarabun PSK", "TH Sarabun New", "Sarabun", "Sarabun New", sans-serif !important;
           color: #000000 !important;
           -webkit-print-color-adjust: exact !important;
@@ -553,12 +553,11 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
 
         /* Web / Screen Styling */
         @media screen {
-          .print-page {
+          .print-page, .print-pdf-page {
             width: 210mm !important;
             height: 297mm !important;
             min-height: 297mm !important;
             max-height: 297mm !important;
-            padding: 2.2cm 2cm 1.8cm 2.8cm !important; /* Left 2.8cm, Top 2.2cm, Right 2cm, Bottom 1.8cm */
             background: white !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
             border: 1px solid #e2e8f0 !important;
@@ -566,6 +565,12 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
             position: relative !important;
             overflow: hidden !important;
             margin: 0 auto !important;
+          }
+          .print-page {
+            padding: 2.2cm 2cm 1.8cm 2.8cm !important; /* Left 2.8cm, Top 2.2cm, Right 2cm, Bottom 1.8cm */
+          }
+          .print-pdf-page {
+            padding: 0 !important;
           }
         }
 
@@ -592,12 +597,11 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
             background: transparent !important;
             display: block !important;
           }
-          .print-page {
+          .print-page, .print-pdf-page {
             box-shadow: none !important;
             border: none !important;
             border-radius: 0 !important;
             margin: 0 !important;
-            padding: 2.2cm 2cm 1.8cm 2.8cm !important; /* Left 2.8cm, Top 2.2cm, Right 2cm, Bottom 1.8cm */
             page-break-after: always !important;
             page-break-inside: avoid !important;
             width: 210mm !important;
@@ -607,6 +611,12 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
             background: white !important;
             position: relative !important;
             overflow: hidden !important;
+          }
+          .print-page {
+            padding: 2.2cm 2cm 1.8cm 2.8cm !important; /* Left 2.8cm, Top 2.2cm, Right 2cm, Bottom 1.8cm */
+          }
+          .print-pdf-page {
+            padding: 0 !important;
           }
         }
 
@@ -1025,6 +1035,58 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
                 </div>
               )}
             </div>
+
+            {/* Section 5: เอกสารแนบ พ.ต.ส. */}
+            <div className="space-y-2.5 pt-3 border-t border-slate-100">
+              <h3 className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5" />
+                เอกสารแนบ พ.ต.ส. (PDF)
+              </h3>
+              
+              <div className="space-y-2">
+                {(() => {
+                  const attachments = officer.ptsAttachments || {};
+                  const docsList = [
+                    { key: "rightsVerification" as const, label: "1. แบบตรวจสอบข้อมูลสิทธิ์" },
+                    { key: "license" as const, label: "2. ใบประกอบวิชาชีพ" },
+                    { key: "degree" as const, label: "3. ใบปริญญาบัตร" },
+                    { key: "idCard" as const, label: "4. บัตรประชาชน" }
+                  ];
+
+                  return docsList.map((doc) => {
+                    const file = attachments[doc.key];
+                    if (file) {
+                      return (
+                        <div key={doc.key} className="bg-emerald-50/70 border border-emerald-100 p-2 rounded-xl flex flex-col gap-1.5">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <span className="text-[10px] font-bold text-emerald-800 leading-tight">{doc.label}</span>
+                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100/60 px-1.5 py-0.5 rounded-full uppercase">แนบแล้ว</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 bg-white/85 p-1.5 rounded-lg border border-emerald-200/40">
+                            <span className="text-[9.5px] text-slate-600 truncate font-mono max-w-[130px]">{file.name}</span>
+                            <a
+                              href={file.base64}
+                              download={file.name}
+                              className="p-1 hover:bg-emerald-100 rounded text-emerald-700 transition shrink-0"
+                              title="ดาวน์โหลดไฟล์ PDF"
+                            >
+                              <Download className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div key={doc.key} className="bg-slate-50 border border-slate-100 p-2 rounded-xl flex items-center justify-between gap-2 opacity-75">
+                          <span className="text-[10px] font-semibold text-slate-500">{doc.label}</span>
+                          <span className="text-[9px] text-slate-400 font-medium">ไม่ได้แนบ</span>
+                        </div>
+                      );
+                    }
+                  });
+                })()}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1133,7 +1195,7 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
               <div className="mt-2 text-center space-y-1">
                 <p className="text-[13.5px]">ข้าพเจ้าขอรับรองว่าข้อมูลดังกล่าวเป็นความจริงทุกประการ</p>
                 
-                <div className="w-[300px] ml-auto space-y-0.5 mt-1">
+                <div className="w-[300px] ml-auto space-y-0.5 mt-8">
                   <p className="border-b border-dotted border-black pb-0.5 text-black">&nbsp;</p>
                   <p className="font-semibold whitespace-nowrap">({title} {firstName} {lastName})</p>
                   <p className="text-[13px] text-black whitespace-nowrap">ตำแหน่ง {position}</p>
@@ -1340,6 +1402,48 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
               </div>
             </div>
           )}
+
+          {/* ========================================================== */}
+          {/* PAGES: Attached PDFs for PTS */}
+          {/* ========================================================== */}
+          {(activeFormTab === "all" || activeFormTab === "pts") && (() => {
+            const attachments = officer.ptsAttachments || {};
+            const docsList = [
+              { key: "rightsVerification" as const, label: "1. แบบตรวจสอบข้อมูลสิทธิ์ (ตรวจสอบสิทธิ์พ้นข้อผูกพันฯ)" },
+              { key: "license" as const, label: "2. ใบประกอบวิชาชีพ (ใบอนุญาตประกอบวิชาชีพ)" },
+              { key: "degree" as const, label: "3. ใบปริญญาบัตร (ใบปริญญาบัตรการศึกษา)" },
+              { key: "idCard" as const, label: "4. บัตรประชาชน (บัตรประจำตัวประชาชน)" }
+            ];
+
+            return docsList.map((doc) => {
+              const file = attachments[doc.key];
+              if (!file) return null;
+
+              return (
+                <div key={doc.key} className="print-pdf-page relative bg-white flex flex-col">
+                  {/* On screen, show a beautiful header, but in print, it will be hidden */}
+                  <div className="no-print bg-slate-100 px-6 py-2.5 flex items-center justify-between border-b border-slate-200">
+                    <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 font-sans">
+                      <Paperclip className="w-3.5 h-3.5 text-indigo-600" />
+                      เอกสารแนบ: {doc.label}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-sans">
+                      พร้อมพิมพ์ (PDF)
+                    </span>
+                  </div>
+                  
+                  {/* The actual PDF viewer */}
+                  <div className="flex-1 w-full h-full min-h-0 relative">
+                    <iframe
+                      src={file.base64}
+                      className="w-full h-full border-none absolute inset-0"
+                      title={doc.label}
+                    />
+                  </div>
+                </div>
+              );
+            });
+          })()}
 
           {/* Guidelines notes - no-print */}
           <div className="no-print bg-amber-50 border border-amber-200 rounded-xl p-5 text-xs text-amber-800 space-y-2 max-w-4xl">

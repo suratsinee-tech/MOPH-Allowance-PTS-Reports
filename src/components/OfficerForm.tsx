@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { Officer, WorkHistory } from "../types";
-import { Plus, Trash2, Calendar, MapPin, CreditCard, User } from "lucide-react";
+import { Plus, Trash2, Calendar, MapPin, CreditCard, User, Paperclip, FileText, Upload, X, Eye } from "lucide-react";
 import { calculateDuration } from "../utils";
 
 interface OfficerFormProps {
@@ -39,6 +39,104 @@ export default function OfficerForm({ initialOfficer, onSave, onCancel }: Office
   const [fundSourcePts, setFundSourcePts] = useState(
     initialOfficer?.fundSourcePts || "เงินงบประมาณโรงพยาบาลสมเด็จพระยุพราชเดชอุดม"
   );
+
+  const [ptsAttachments, setPtsAttachments] = useState<Officer["ptsAttachments"]>(
+    initialOfficer?.ptsAttachments || {}
+  );
+
+  const handleFileChange = (
+    key: keyof NonNullable<Officer["ptsAttachments"]>,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      alert("กรุณาเลือกไฟล์ PDF เท่านั้น");
+      return;
+    }
+
+    // 2MB size limit to prevent localStorage storage limits
+    if (file.size > 2 * 1024 * 1024) {
+      alert("ขนาดไฟล์ใหญ่เกินไป กรุณาเลือกไฟล์ PDF ที่มีขนาดไม่เกิน 2MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setPtsAttachments((prev) => ({
+        ...prev,
+        [key]: {
+          name: file.name,
+          base64: base64
+        }
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = (key: keyof NonNullable<Officer["ptsAttachments"]>) => {
+    setPtsAttachments((prev) => {
+      const copy = { ...prev };
+      delete copy[key];
+      return copy;
+    });
+  };
+
+  const renderAttachmentInput = (
+    key: keyof NonNullable<Officer["ptsAttachments"]>,
+    label: string,
+    placeholder: string
+  ) => {
+    const file = ptsAttachments?.[key];
+    return (
+      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-2.5">
+        <div>
+          <span className="block text-xs font-bold text-slate-700">{label}</span>
+          <span className="block text-[10px] text-slate-400 mt-0.5">{placeholder}</span>
+        </div>
+
+        {file ? (
+          <div className="flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-100 p-2 rounded-lg">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-xs text-emerald-800 truncate font-medium font-sans">{file.name}</span>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <a
+                href={file.base64}
+                download={file.name}
+                className="p-1 hover:bg-emerald-100 rounded text-emerald-700 transition"
+                title="ดาวน์โหลดไฟล์"
+              >
+                <Eye className="w-3.5 h-3.5" />
+              </a>
+              <button
+                type="button"
+                onClick={() => handleRemoveFile(key)}
+                className="p-1 hover:bg-rose-100 rounded text-rose-600 transition"
+                title="ลบไฟล์"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <label className="flex items-center justify-center gap-2 border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/20 py-2.5 px-3 rounded-lg cursor-pointer transition text-slate-500 hover:text-emerald-700">
+            <Upload className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-xs font-semibold">อัปโหลด PDF</span>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => handleFileChange(key, e)}
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+    );
+  };
 
   // Work Histories
   const [workHistories, setWorkHistories] = useState<WorkHistory[]>(
@@ -102,7 +200,8 @@ export default function OfficerForm({ initialOfficer, onSave, onCancel }: Office
       ptsRate: Number(ptsRate),
       fundSourceAllowance: fundSourceAllowance.trim(),
       fundSourcePts: fundSourcePts.trim(),
-      workHistories
+      workHistories,
+      ptsAttachments
     };
 
     onSave(savedOfficer);
@@ -325,6 +424,20 @@ export default function OfficerForm({ initialOfficer, onSave, onCancel }: Office
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Section 3.5: เอกสารแนบ สำหรับการเบิก พ.ต.ส. */}
+          <div className="mt-6 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100/60 space-y-3.5">
+            <h4 className="text-xs font-bold text-indigo-950 flex items-center gap-1.5 uppercase tracking-wide">
+              <Paperclip className="w-4 h-4 text-indigo-600" />
+              เอกสารแนบประกอบการจ่าย ค่าตอบแทน พ.ต.ส. (ไฟล์ PDF เท่านั้น)
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {renderAttachmentInput("rightsVerification", "1. แบบตรวจสอบข้อมูลสิทธิ์", "ตรวจสอบสิทธิ์พ้นข้อผูกพันฯ")}
+              {renderAttachmentInput("license", "2. ใบประกอบวิชาชีพ", "ใบอนุญาตประกอบวิชาชีพ")}
+              {renderAttachmentInput("degree", "3. ใบปริญญาบัตร", "ใบปริญญาบัตรการศึกษา")}
+              {renderAttachmentInput("idCard", "4. บัตรประชาชน", "บัตรประจำตัวประชาชน")}
             </div>
           </div>
         </div>
