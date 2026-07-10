@@ -41,6 +41,7 @@ export function mapFromDb(dbRecord: any): Officer {
     workHistories: Array.isArray(dbRecord.work_histories)
       ? dbRecord.work_histories
       : [],
+    ptsAttachments: dbRecord.pts_attachments || undefined,
   };
 }
 
@@ -65,6 +66,7 @@ export function mapToDb(officer: Officer): any {
     fund_source_allowance: officer.fundSourceAllowance,
     fund_source_pts: officer.fundSourcePts,
     work_histories: officer.workHistories,
+    pts_attachments: officer.ptsAttachments || null,
   };
 }
 

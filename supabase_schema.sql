@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS officers (
   
   -- Complex array of work histories stored as JSONB for flexibility and exact match with React state
   work_histories JSONB DEFAULT '[]'::jsonb,
+  pts_attachments JSONB DEFAULT '{}'::jsonb,
   
   -- Metadata
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
