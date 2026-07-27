@@ -27,7 +27,9 @@ import {
   ShieldCheck,
   KeyRound,
   Eye,
-  EyeOff
+  EyeOff,
+  RefreshCw,
+  ExternalLink
 } from "lucide-react";
 import { 
   isSupabaseConfigured, 
@@ -91,35 +93,22 @@ export default function App() {
   const [showHintPassword, setShowHintPassword] = useState<boolean>(true);
 
   // Load from Supabase with LocalStorage fallback
-  useEffect(() => {
-    async function loadData() {
-      if (isSupabaseConfigured) {
-        setDbStatus("connecting");
-        try {
-          const dbOfficers = await getOfficersFromSupabase();
-          setOfficers(dbOfficers);
-          setDbStatus("connected");
-          // Mirror to localStorage
-          localStorage.setItem("moph_officers", JSON.stringify(dbOfficers));
-        } catch (err: any) {
-          console.error("Failed to connect to Supabase:", err);
-          setDbStatus("error");
-          setDbErrorMsg(err?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับ Supabase");
-          
-          // Fallback to local storage
-          const saved = localStorage.getItem("moph_officers");
-          if (saved) {
-            try {
-              setOfficers(JSON.parse(saved));
-            } catch (e) {
-              setOfficers(SAMPLE_OFFICERS);
-            }
-          } else {
-            setOfficers(SAMPLE_OFFICERS);
-          }
-        }
-      } else {
-        setDbStatus("not_configured");
+  const loadData = async () => {
+    if (isSupabaseConfigured) {
+      setDbStatus("connecting");
+      try {
+        const dbOfficers = await getOfficersFromSupabase();
+        setOfficers(dbOfficers);
+        setDbStatus("connected");
+        setDbErrorMsg("");
+        // Mirror to localStorage
+        localStorage.setItem("moph_officers", JSON.stringify(dbOfficers));
+      } catch (err: any) {
+        console.warn("Failed to connect to Supabase:", err);
+        setDbStatus("error");
+        setDbErrorMsg(err?.message || "โปรเจกต์ Supabase อาจจะถูกระงับ (Project Paused) หรือไม่สามารถเชื่อมต่อได้");
+        
+        // Fallback to local storage
         const saved = localStorage.getItem("moph_officers");
         if (saved) {
           try {
@@ -129,10 +118,25 @@ export default function App() {
           }
         } else {
           setOfficers(SAMPLE_OFFICERS);
-          localStorage.setItem("moph_officers", JSON.stringify(SAMPLE_OFFICERS));
         }
       }
+    } else {
+      setDbStatus("not_configured");
+      const saved = localStorage.getItem("moph_officers");
+      if (saved) {
+        try {
+          setOfficers(JSON.parse(saved));
+        } catch (e) {
+          setOfficers(SAMPLE_OFFICERS);
+        }
+      } else {
+        setOfficers(SAMPLE_OFFICERS);
+        localStorage.setItem("moph_officers", JSON.stringify(SAMPLE_OFFICERS));
+      }
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -161,7 +165,12 @@ export default function App() {
         setActiveView("list");
       } catch (err: any) {
         console.error("Error saving to Supabase:", err);
-        alert("ไม่สามารถบันทึกข้อมูลไปยัง Supabase ได้: " + (err?.message || "กรุณาตรวจสอบสิทธิ์การเขียนข้อมูล"));
+        // Save to local storage as fallback so user work isn't lost
+        setOfficers(updated);
+        localStorage.setItem("moph_officers", JSON.stringify(updated));
+        setEditingOfficer(null);
+        setActiveView("list");
+        alert("ไม่สามารถบันทึกไปยัง Supabase ได้ (" + (err?.message || "โปรเจกต์อาจถูกระงับ/Project Paused") + ")\n\nระบบบันทึกข้อมูลไว้ในเครื่อง (Local Mode) ให้เรียบร้อยแล้ว");
       }
     } else {
       // Local fallback
@@ -190,7 +199,9 @@ export default function App() {
           localStorage.setItem("moph_officers", JSON.stringify(updated));
         } catch (err: any) {
           console.error("Error deleting from Supabase:", err);
-          alert("ไม่สามารถลบข้อมูลจาก Supabase ได้: " + (err?.message || ""));
+          setOfficers(updated);
+          localStorage.setItem("moph_officers", JSON.stringify(updated));
+          alert("ไม่สามารถลบจาก Supabase ได้ (" + (err?.message || "") + ")\n\nระบบได้ลบออกจากเครื่องเรียบร้อยแล้ว");
         }
       } else {
         // Local fallback
@@ -429,13 +440,24 @@ export default function App() {
                   </span>
                 )}
                 {dbStatus === "error" && (
-                  <span 
-                    className="bg-rose-50 text-rose-800 border border-rose-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 cursor-help shadow-sm"
-                    title={dbErrorMsg}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                    Supabase ผิดพลาด (ใช้โหมดออฟไลน์) 🔴
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span 
+                      className="bg-rose-50 text-rose-800 border border-rose-100 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer shadow-sm"
+                      title={dbErrorMsg}
+                      onClick={() => setShowDbConfig(true)}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                      Supabase ถูกระงับ/ขัดข้อง (ใช้โหมดออฟไลน์) 🔴
+                    </span>
+                    <button
+                      onClick={loadData}
+                      className="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-slate-200 flex items-center gap-1 transition cursor-pointer shadow-sm"
+                      title="ลองเชื่อมต่อใหม่อีกครั้ง"
+                    >
+                      <RefreshCw className="w-3 h-3 text-slate-500" />
+                      ลองเชื่อมต่อใหม่
+                    </button>
+                  </div>
                 )}
                 {dbStatus === "not_configured" && (
                   <span className="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
@@ -551,6 +573,52 @@ export default function App() {
               {/* Decorative graphic background lines */}
               <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 bg-[radial-gradient(circle_at_right,rgba(255,255,255,0.4),transparent)] pointer-events-none"></div>
             </div>
+
+            {/* Paused / Connection Error Alert Banner */}
+            {dbStatus === "error" && (
+              <div className="bg-rose-50 rounded-2xl p-5 border border-rose-200/80 shadow-sm space-y-3.5 animate-in fade-in duration-200">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 bg-rose-100/80 rounded-xl text-rose-700 shrink-0 mt-0.5">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-rose-950 text-sm flex items-center gap-2">
+                        <span>ไม่สามารถเชื่อมต่อ Supabase ได้ (โปรเจกต์อาจถูก Pause หรือขัดข้อง)</span>
+                        <span className="bg-rose-200/70 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Project Paused</span>
+                      </h4>
+                      <p className="text-xs text-rose-800/90 font-medium">
+                        {dbErrorMsg}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={loadData}
+                    className="shrink-0 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin-hover" />
+                    ลองเชื่อมต่อใหม่
+                  </button>
+                </div>
+
+                <div className="bg-white/80 p-3.5 rounded-xl border border-rose-100 text-xs text-slate-700 space-y-2">
+                  <p className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <span>💡 คำแนะนำในการเปิดใช้งานโปรเจกต์ Supabase อีกครั้ง (Unpause):</span>
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-600 pl-1 leading-relaxed">
+                    <li>
+                      ไปที่หน้า <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-indigo-700 font-bold underline inline-flex items-center gap-1">Supabase Dashboard <ExternalLink className="w-3 h-3 inline" /></a>
+                    </li>
+                    <li>เลือกโปรเจกต์ของคุณ แล้วคลิกปุ่ม <strong>"Restore project"</strong> หรือ <strong>"Unpause"</strong></li>
+                    <li>รอโปรเจกต์เริ่มทำงานประมาณ 1-2 นาที จากนั้นกดปุ่ม <strong>"ลองเชื่อมต่อใหม่"</strong> ด้านบน</li>
+                  </ol>
+                  <div className="pt-1.5 border-t border-rose-100/60 flex flex-wrap items-center justify-between text-[11px] text-slate-500 gap-2">
+                    <span>📌 ระหว่างนี้คุณสามารถใช้งานระบบ **เพิ่ม/แก้ไข/ลบ/พิมพ์เอกสาร** ได้ตามปกติใน **โหมดออฟไลน์ (Local Mode)**</span>
+                    <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">ระบบบันทึกข้อมูลในเครื่องอัตโนมัติ</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Supabase Integration Helper Guide */}
             <div className="bg-white rounded-2xl p-6 border border-slate-150 shadow-sm space-y-4">
