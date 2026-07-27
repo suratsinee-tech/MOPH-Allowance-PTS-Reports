@@ -54,13 +54,13 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
   // Overridden service period calculations
   const [overrideServiceTime, setOverrideServiceTime] = useState<boolean>(false);
   const [customYears, setCustomYears] = useState<number>(22);
-  const [customMonths, setCustomMonths] = useState<number>(3);
-  const [customDays, setCustomDays] = useState<number>(0);
+  const [customMonths, setCustomMonths] = useState<number>(2);
+  const [customDays, setCustomDays] = useState<number>(17);
 
   // Auto-calculation of service period up to the last day of the selected month
-  const [autoYears, setAutoYears] = useState<number>(0);
-  const [autoMonths, setAutoMonths] = useState<number>(0);
-  const [autoDays, setAutoDays] = useState<number>(0);
+  const [autoYears, setAutoYears] = useState<number>(22);
+  const [autoMonths, setAutoMonths] = useState<number>(2);
+  const [autoDays, setAutoDays] = useState<number>(17);
 
   // Set default document date to the last day of the selected month
   useEffect(() => {
@@ -69,17 +69,19 @@ export default function ReportPreview({ officer, onBack }: ReportPreviewProps) {
   }, [selectedMonth, selectedYearBE]);
 
   // Re-calculate the automatic duration whenever month, year or officer history changes
+  // Counting up to the last day of the selected month
   useEffect(() => {
     if (officer.workHistories && officer.workHistories.length > 0) {
-      // Find the primary or longest active history, or accumulate.
-      // Usually we calculate from the earliest start date to the end of the selected month.
-      const startDates = officer.workHistories.map(h => new Date(h.startDate).getTime());
-      const earliestStart = new Date(Math.min(...startDates));
+      // Find the earliest start date cleanly without timezone artifacts
+      const sortedStartDates = officer.workHistories
+        .map(h => h.startDate)
+        .filter(Boolean)
+        .sort();
       
+      const earliestStartStr = sortedStartDates[0] || "2004-05-15";
       const lastDayStr = getLastDayOfMonth(selectedMonth, selectedYearBE);
-      const end = new Date(lastDayStr);
 
-      const duration = calculateDuration(earliestStart.toISOString().split("T")[0], lastDayStr);
+      const duration = calculateDuration(earliestStartStr, lastDayStr);
       setAutoYears(duration.years);
       setAutoMonths(duration.months);
       setAutoDays(duration.days);

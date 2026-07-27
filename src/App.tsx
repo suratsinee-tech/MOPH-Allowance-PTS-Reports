@@ -65,7 +65,7 @@ const SAMPLE_OFFICERS: Officer[] = [
         id: "hist-1",
         workplace: "โรงพยาบาลสมเด็จพระยุพราชเดชอุดม",
         province: "อุบลราชธานี",
-        startDate: "2004-05-11", // 11 พฤษภาคม 2547
+        startDate: "2004-05-15", // 15 พฤษภาคม 2547
         endDate: "current"
       }
     ]

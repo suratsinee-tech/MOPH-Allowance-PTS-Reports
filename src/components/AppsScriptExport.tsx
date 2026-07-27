@@ -64,7 +64,7 @@ function getOfficers() {
           id: "hist-1",
           workplace: "สมเด็จพระยุพราชเดชอุดม",
           province: "อุบลราชธานี",
-          startDate: "2004-05-11",
+          startDate: "2004-05-15",
           endDate: "current"
         }]
       }];
@@ -447,7 +447,7 @@ function saveOfficers(jsonData) {
         currentOfficer = null;
         document.getElementById("form-title").innerText = "เพิ่มบุคลากรใหม่";
         document.getElementById("field-id").value = "";
-        document.getElementById("field-startDate").value = "2004-05-11";
+        document.getElementById("field-startDate").value = "2004-05-15";
       }
 
       document.getElementById("view-list").classList.add("hidden");
@@ -590,7 +590,7 @@ function saveOfficers(jsonData) {
       const lastDay = new Date(ceYear, m, 0).getDate();
       const lastDayStr = ceYear + "-" + String(m).padStart(2, '0') + "-" + String(lastDay).padStart(2, '0');
 
-      const start = o.workHistories[0] ? o.workHistories[0].startDate : "2004-05-11";
+      const start = o.workHistories[0] ? o.workHistories[0].startDate : "2004-05-15";
       const duration = calculateDuration(start, lastDayStr);
 
       const htmlMonth = thaiMonths[m];
