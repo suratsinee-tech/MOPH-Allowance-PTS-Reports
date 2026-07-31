@@ -67,7 +67,7 @@ INSERT INTO officers (
   id, title, first_name, last_name, position, workplace, province, gis_level,
   house_no, moo, subdistrict, district, province_address,
   allowance_rate, pts_rate, fund_source_allowance, fund_source_pts,
-  work_histories
+  work_histories, pts_attachments
 ) VALUES (
   'thanwit-kamtha',
   'นาย',
@@ -91,8 +91,13 @@ INSERT INTO officers (
       "id": "hist-1",
       "workplace": "สมเด็จพระยุพราชเดชอุดม",
       "province": "อุบลราชธานี",
-      "startDate": "2004-05-11",
+      "startDate": "2004-05-15",
       "endDate": "current"
     }
-  ]'::jsonb
+  ]'::jsonb,
+  '{
+    "rightsVerification": { "name": "พตส-pdf.pdf", "base64": "data:application/pdf;base64,JVBERi0xLjQKJVRleHQgUERG" },
+    "license": { "name": "ใบประกอบ.pdf", "base64": "data:application/pdf;base64,JVBERi0xLjQKJVRleHQgUERG" },
+    "degree": { "name": "ปริญญาบัตร.pdf", "base64": "data:application/pdf;base64,JVBERi0xLjQKJVRleHQgUERG" }
+  }'::jsonb
 ) ON CONFLICT (id) DO NOTHING;

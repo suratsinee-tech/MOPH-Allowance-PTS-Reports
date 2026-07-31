@@ -68,7 +68,21 @@ const SAMPLE_OFFICERS: Officer[] = [
         startDate: "2004-05-15", // 15 พฤษภาคม 2547
         endDate: "current"
       }
-    ]
+    ],
+    ptsAttachments: {
+      rightsVerification: {
+        name: "พตส-pdf.pdf",
+        base64: "data:application/pdf;base64,JVBERi0xLjQKJVRleHQgUERG"
+      },
+      license: {
+        name: "ใบประกอบ.pdf",
+        base64: "data:application/pdf;base64,JVBERi0xLjQKJVRleHQgUERG"
+      },
+      degree: {
+        name: "ปริญญาบัตร.pdf",
+        base64: "data:application/pdf;base64,JVBERi0xLjQKJVRleHQgUERG"
+      }
+    }
   }
 ];
 
